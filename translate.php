@@ -9,7 +9,7 @@
 //  3. Gotowe – aplikacja automatycznie go znajdzie
 // ================================================================
 
-define('CLAUDE_API_KEY', 'sk-ant-TUTAJ-WPISZ-KLUCZ-API');
+define('CLAUDE_API_KEY', getenv('CLAUDE_API_KEY') ?: 'sk-ant-TUTAJ-WPISZ-KLUCZ-API');
 define('CLAUDE_MODEL',   'claude-sonnet-4-20250514');
 define('MAX_TOKENS',     1000);
 
