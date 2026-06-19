@@ -1,0 +1,15 @@
+# Dane użytkowników (nie wgrywaj do git!)
+users.json
+
+# PHP
+*.log
+*.cache
+
+# System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0a0806"/>
+<title>Face-to-Face – Cramer Mühle</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html,body{height:100%;background:#0a0806;font-family:'Segoe UI',sans-serif;overflow:hidden;}
+#app{height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:#0a0806;position:relative;}
+
+:root{--gold:#c9a84c;--gold-dark:#a07830;--gold-light:#e8c96a;--border:rgba(201,168,76,.22);--card:rgba(201,168,76,.07);}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes wave{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.7)}50%{box-shadow:0 0 0 22px rgba(201,168,76,0)}}
+@keyframes speakPulse{0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,.6)}50%{box-shadow:0 0 0 18px rgba(74,222,128,0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(201,168,76,.25)}50%{box-shadow:0 0 50px rgba(201,168,76,.6)}}
+@keyframes slideIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes notifIn{from{opacity:0;transform:translateX(-50%) translateY(-60px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes textIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,.25);border-radius:2px;}
+
+/* ── SETUP ── */
+#setup{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;padding:20px;overflow-y:auto;
+  background:radial-gradient(ellipse at 50% 30%,rgba(201,168,76,.1) 0%,#0a0806 65%);
+  animation:fadeIn .4s ease;
+}
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;}
+.lang-btn{
+  padding:10px 6px;border-radius:12px;border:1px solid rgba(201,168,76,.2);
+  background:rgba(201,168,76,.07);color:#c0a870;font-size:12px;
+  cursor:pointer;font-family:inherit;text-align:center;transition:all .15s;
+  line-height:1.4;
+}
+.lang-btn:active{transform:scale(.95);}
+.lang-btn.sel{
+  background:linear-gradient(135deg,var(--gold-dark),var(--gold));
+  border-color:var(--gold);color:#0a0806;font-weight:700;
+  box-shadow:0 4px 16px rgba(201,168,76,.45);
+}
+
+/* ── CONV ── */
+#conv{display:none;flex-direction:column;flex:1;overflow:hidden;}
+
+.half{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;
+  padding:12px 16px;position:relative;overflow:hidden;
+}
+.half-a{
+  background:linear-gradient(180deg,rgba(201,168,76,.06) 0%,transparent 100%);
+  border-bottom:1px solid rgba(201,168,76,.2);
+  transform:rotate(180deg);
+}
+.half-b{
+  background:linear-gradient(0deg,rgba(201,168,76,.06) 0%,transparent 100%);
+}
+
+.divider{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 16px;
+  background:rgba(10,8,6,.97);
+  border-top:1px solid rgba(201,168,76,.15);
+  border-bottom:1px solid rgba(201,168,76,.15);
+  flex-shrink:0;gap:8px;
+}
+
+/* ── MIC BUTTON ── */
+.mic-btn{
+  width:100px;height:100px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold-dark),var(--gold));
+  color:#0a0806;font-size:42px;
+  box-shadow:0 8px 32px rgba(201,168,76,.5);
+  transition:transform .1s;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  -webkit-user-select:none;user-select:none;
+  position:relative;
+}
+.mic-btn:active{transform:scale(.92);}
+.mic-btn.recording{
+  background:linear-gradient(135deg,#8b1a1a,#c0392b);
+  box-shadow:0 0 0 0 rgba(201,168,76,.7);
+  animation:recPulse 1s infinite;
+  color:#fff;
+}
+.mic-btn.speaking{
+  background:linear-gradient(135deg,#0d5c2e,#16a34a);
+  box-shadow:0 0 0 0 rgba(74,222,128,.6);
+  animation:speakPulse 1s infinite;
+  color:#fff;
+}
+
+/* ── TTS toggle ── */
+.tts-toggle{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);
+  border-radius:20px;padding:5px 12px;cursor:pointer;
+  font-size:12px;color:#c9a84c;font-weight:600;
+  transition:all .15s;
+}
+.tts-toggle.on{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.4);color:#4ade80;}
+
+/* ── TRANS BOX ── */
+.trans-box{
+  width:100%;max-width:340px;
+  background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.22);
+  border-radius:18px;padding:12px 16px;
+  min-height:64px;text-align:center;
+  animation:slideIn .25s ease;
+}
+.trans-original{font-size:11px;color:#a07830;font-style:italic;margin-bottom:5px;animation:textIn .3s ease;}
+.trans-result{font-size:16px;color:#f0e8d0;font-weight:500;line-height:1.5;animation:textIn .3s ease;}
+.trans-loading{display:flex;align-items:center;justify-content:center;gap:8px;color:#c9a84c;font-size:13px;}
+.speaking-indicator{display:flex;align-items:center;justify-content:center;gap:6px;color:#4ade80;font-size:12px;font-weight:600;margin-top:6px;}
+
+.person-label{
+  font-size:11px;font-weight:700;letter-spacing:1.5px;
+  color:rgba(201,168,76,.6);text-align:center;
+}
+.lang-badge{
+  font-size:12px;font-weight:600;color:var(--gold);
+  background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);
+  border-radius:20px;padding:3px 12px;
+}
+
+/* ── WAVEFORM ── */
+.wf{display:flex;align-items:center;gap:2px;height:24px;}
+.wfb{width:4px;border-radius:2px;background:rgba(201,168,76,.25);height:25%;}
+.wfb.act{background:var(--gold);}
+.wfb.spk{background:#4ade80;}
+
+/* ── VOLUME CONTROL ── */
+.vol-row{display:flex;align-items:center;gap:8px;width:100%;max-width:260px;}
+.vol-row input[type=range]{
+  flex:1;-webkit-appearance:none;height:4px;
+  background:rgba(201,168,76,.2);border-radius:2px;outline:none;
+}
+.vol-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:linear-gradient(135deg,#a07830,#c9a84c);cursor:pointer;
+}
+
+/* ── NOTIF ── */
+#notif{
+  position:fixed;top:max(10px,env(safe-area-inset-top,10px));left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#a07830,#c9a84c);color:#0a0806;
+  border-radius:16px;padding:10px 20px;font-size:13px;font-weight:700;
+  box-shadow:0 8px 32px rgba(201,168,76,.5);z-index:999;display:none;white-space:nowrap;max-width:90%;
+  animation:notifIn .3s ease;
+}
+
+/* ── VOICE SELECT ── */
+.voice-select{
+  background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);
+  border-radius:10px;padding:6px 10px;color:#c9a84c;font-size:12px;
+  font-family:inherit;outline:none;cursor:pointer;max-width:160px;
+}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="notif"></div>
+
+<!-- ══════════════ SETUP ══════════════════════════════════════ -->
+<div id="setup">
+
+  <div style="text-align:center;margin-bottom:18px;width:100%;max-width:380px;">
+    <div style="background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:12px 24px;display:inline-block;animation:glow 3s infinite;">
+      <img src="https://www.cramermuehle.de/templates/cm2019/images/cramermuehle-logo.png" alt="Cramer Mühle" style="height:38px;object-fit:contain;" onerror="this.style.display='none'"/>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-bottom:20px;">
+    <div style="width:60px;height:60px;border-radius:20px;background:linear-gradient(135deg,#a07830,#c9a84c);display:inline-flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 10px 36px rgba(201,168,76,.4);">🤝</div>
+    <h1 style="color:#e8c96a;font-size:20px;margin-top:10px;">Face-to-Face Übersetzer</h1>
+    <p style="color:#5a4e38;font-size:13px;margin-top:3px;">Zwei Personen · Ein Gerät · Stimme auf Stimme</p>
+  </div>
+
+  <!-- TTS Option -->
+  <div style="width:100%;max-width:380px;margin-bottom:18px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.25);border-radius:14px;padding:14px 16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:20px;">🔊</span>
+        <div>
+          <p style="color:#4ade80;font-weight:700;font-size:14px;">Sprachausgabe (TTS)</p>
+          <p style="color:#3a6a4a;font-size:11px;">Übersetzung wird laut vorgelesen</p>
+        </div>
+      </div>
+      <div onclick="toggleTTS()" id="ttsSwitch" style="position:relative;width:44px;height:24px;background:rgba(74,222,128,.4);border-radius:12px;border:1px solid rgba(74,222,128,.5);cursor:pointer;">
+        <div id="ttsKnob" style="position:absolute;top:2px;left:22px;width:18px;height:18px;border-radius:50%;background:#4ade80;transition:transform .25s,left .25s;box-shadow:0 2px 6px rgba(0,0,0,.3);"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;color:#3a6a4a;">🔈</span>
+      <input type="range" id="volSlider" min="0" max="1" step="0.1" value="1" oninput="updateVol()" style="flex:1;-webkit-appearance:none;height:4px;background:rgba(74,222,128,.2);border-radius:2px;outline:none;">
+      <span style="font-size:11px;color:#3a6a4a;">🔊</span>
+    </div>
+  </div>
+
+  <!-- Person A -->
+  <div style="width:100%;max-width:380px;margin-bottom:16px;">
+    <p style="font-size:11px;color:#a07830;font-weight:700;letter-spacing:1.2px;margin-bottom:8px;">👤 PERSON A — SPRICHT:</p>
+    <div class="lang-grid" id="langA-grid"></div>
+  </div>
+
+  <!-- Person B -->
+  <div style="width:100%;max-width:380px;margin-bottom:22px;">
+    <p style="font-size:11px;color:#a07830;font-weight:700;letter-spacing:1.2px;margin-bottom:8px;">👤 PERSON B — SPRICHT:</p>
+    <div class="lang-grid" id="langB-grid"></div>
+  </div>
+
+  <button onclick="startConv()" style="width:100%;max-width:380px;padding:16px;border-radius:16px;border:1px solid #c9a84c;background:linear-gradient(135deg,#a07830,#c9a84c);color:#0a0806;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 8px 28px rgba(201,168,76,.45);">
+    Gespräch starten →
+  </button>
+
+  <a href="voicetranslate.html" style="display:block;text-align:center;margin-top:14px;color:#5a4e38;font-size:13px;text-decoration:none;">← Zurück zum Messenger</a>
+</div>
+
+<!-- ══════════════ CONVERSATION ════════════════════════════════ -->
+<div id="conv">
+
+  <!-- PERSON A (top, rotated 180°) -->
+  <div class="half half-a" id="halfA">
+    <div class="person-label" id="lblA">PERSON A</div>
+    <div class="trans-box" id="boxA">
+      <p class="trans-result" style="color:#5a4e38;font-size:14px;">🎙 Taste gedrückt halten und sprechen</p>
+    </div>
+    <div class="wf" id="wfA"></div>
+    <button class="mic-btn" id="micA"
+      onmousedown="startRec('A')" onmouseup="stopRec('A')"
+      ontouchstart="event.preventDefault();startRec('A');"
+      ontouchend="event.preventDefault();stopRec('A');">🎙</button>
+    <div class="lang-badge" id="badgeA"></div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="divider">
+    <img src="https://www.cramermuehle.de/templates/cm2019/images/cramermuehle-logo.png" alt="" style="height:20px;object-fit:contain;opacity:.6;" onerror="this.style.display='none'"/>
+    <div onclick="toggleTTSConv()" class="tts-toggle on" id="ttsConvBtn">
+      <span id="ttsConvIcon">🔊</span>
+      <span id="ttsConvLbl">Stimme AN</span>
+    </div>
+    <button onclick="resetConv()" style="background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:8px;color:#c9a84c;font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;">⟳ Neu</button>
+  </div>
+
+  <!-- PERSON B (bottom) -->
+  <div class="half half-b" id="halfB">
+    <div class="person-label" id="lblB">PERSON B</div>
+    <div class="trans-box" id="boxB">
+      <p class="trans-result" style="color:#5a4e38;font-size:14px;">🎙 Taste gedrückt halten und sprechen</p>
+    </div>
+    <div class="wf" id="wfB"></div>
+    <button class="mic-btn" id="micB"
+      onmousedown="startRec('B')" onmouseup="stopRec('B')"
+      ontouchstart="event.preventDefault();startRec('B');"
+      ontouchend="event.preventDefault();stopRec('B');">🎙</button>
+    <div class="lang-badge" id="badgeB"></div>
+  </div>
+</div>
+
+</div>
+<script>
+var PROXY='translate.php';
+
+var LANGS=[
+  {c:'de',l:'Deutsch',   flag:'🇩🇪',sr:'de-DE',tts:'de-DE'},
+  {c:'pl',l:'Polnisch',  flag:'🇵🇱',sr:'pl-PL',tts:'pl-PL'},
+  {c:'en',l:'Englisch',  flag:'🇬🇧',sr:'en-US',tts:'en-US'},
+  {c:'ro',l:'Rumänisch', flag:'🇷🇴',sr:'ro-RO',tts:'ro-RO'},
+  {c:'ru',l:'Russisch',  flag:'🇷🇺',sr:'ru-RU',tts:'ru-RU'},
+  {c:'uk',l:'Ukrainisch',flag:'🇺🇦',sr:'uk-UA',tts:'uk-UA'},
+  {c:'fr',l:'Français',  flag:'🇫🇷',sr:'fr-FR',tts:'fr-FR'},
+  {c:'es',l:'Español',   flag:'🇪🇸',sr:'es-ES',tts:'es-ES'},
+  {c:'it',l:'Italiano',  flag:'🇮🇹',sr:'it-IT',tts:'it-IT'},
+  {c:'tr',l:'Türkçe',    flag:'🇹🇷',sr:'tr-TR',tts:'tr-TR'},
+];
+var LM={};LANGS.forEach(function(l){LM[l.c]=l;});
+
+var STATE={
+  langA:'de',langB:'pl',
+  recA:false,recB:false,
+  mrA:null,mrB:null,
+  chA:[],chB:[],
+  timerA:null,timerB:null,
+  secA:0,secB:0,
+  ttsOn:true,
+  vol:1.0,
+  ttsVoices:[],
+  currentSpeech:null,
+};
+
+// ── Load TTS voices ─────────────────────────────────────────────────────────
+function loadVoices(){
+  STATE.ttsVoices=window.speechSynthesis.getVoices();
+}
+if(window.speechSynthesis){
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged=loadVoices;
+}
+
+// ── Get best voice for language ─────────────────────────────────────────────
+function getBestVoice(langCode){
+  var voices=STATE.ttsVoices;
+  var ttsCode=LM[langCode]?LM[langCode].tts:langCode;
+  // exact match
+  var v=voices.find(function(v){return v.lang===ttsCode;});
+  if(v)return v;
+  // prefix match (e.g. 'de' matches 'de-DE', 'de-AT')
+  var prefix=ttsCode.split('-')[0];
+  v=voices.find(function(v){return v.lang.startsWith(prefix);});
+  if(v)return v;
+  return null;
+}
+
+// ── Text-to-Speech ──────────────────────────────────────────────────────────
+function speak(text, langCode, onDone){
+  if(!STATE.ttsOn){if(onDone)onDone();return;}
+  if(!window.speechSynthesis){if(onDone)onDone();return;}
+  // cancel any ongoing speech
+  window.speechSynthesis.cancel();
+  var utter=new SpeechSynthesisUtterance(text);
+  var voice=getBestVoice(langCode);
+  if(voice)utter.voice=voice;
+  utter.lang=LM[langCode]?LM[langCode].tts:langCode;
+  utter.volume=STATE.vol;
+  utter.rate=0.95;
+  utter.pitch=1.0;
+  utter.onend=function(){if(onDone)onDone();};
+  utter.onerror=function(){if(onDone)onDone();};
+  STATE.currentSpeech=utter;
+  window.speechSynthesis.speak(utter);
+}
+
+// ── TTS Toggle ──────────────────────────────────────────────────────────────
+function toggleTTS(){
+  STATE.ttsOn=!STATE.ttsOn;
+  var knob=document.getElementById('ttsKnob');
+  var sw=document.getElementById('ttsSwitch');
+  if(STATE.ttsOn){
+    knob.style.left='22px';knob.style.background='#4ade80';
+    sw.style.background='rgba(74,222,128,.4)';sw.style.borderColor='rgba(74,222,128,.5)';
+  } else {
+    knob.style.left='2px';knob.style.background='#555';
+    sw.style.background='rgba(255,255,255,.05)';sw.style.borderColor='rgba(255,255,255,.1)';
+  }
+}
+function toggleTTSConv(){
+  STATE.ttsOn=!STATE.ttsOn;
+  var btn=document.getElementById('ttsConvBtn');
+  var icon=document.getElementById('ttsConvIcon');
+  var lbl=document.getElementById('ttsConvLbl');
+  if(STATE.ttsOn){btn.classList.add('on');icon.textContent='🔊';lbl.textContent='Stimme AN';}
+  else{btn.classList.remove('on');icon.textContent='🔇';lbl.textContent='Stimme AUS';}
+  if(!STATE.ttsOn&&window.speechSynthesis)window.speechSynthesis.cancel();
+}
+function updateVol(){
+  STATE.vol=parseFloat(document.getElementById('volSlider').value);
+}
+
+// ── Build grids ─────────────────────────────────────────────────────────────
+function buildGrids(){
+  ['A','B'].forEach(function(p){
+    var cur=p==='A'?STATE.langA:STATE.langB;
+    var html='';
+    LANGS.forEach(function(l){
+      var sel=cur===l.c;
+      html+='<button class="lang-btn'+(sel?' sel':'')+'" onclick="selLang(\''+p+'\',\''+l.c+'\')">'
+        +l.flag+'<br/><span style="font-size:11px;">'+l.l+'</span></button>';
+    });
+    document.getElementById('lang'+p+'-grid').innerHTML=html;
+  });
+}
+function selLang(p,c){
+  if(p==='A')STATE.langA=c; else STATE.langB=c;
+  buildGrids();
+}
+
+// ── Start conversation ───────────────────────────────────────────────────────
+function startConv(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('conv').style.display='flex';
+  var la=LM[STATE.langA];var lb=LM[STATE.langB];
+  document.getElementById('lblA').textContent='PERSON A · '+la.flag+' '+la.l;
+  document.getElementById('lblB').textContent='PERSON B · '+lb.flag+' '+lb.l;
+  document.getElementById('badgeA').textContent='🎙 '+la.flag+' → 🔊 '+lb.flag;
+  document.getElementById('badgeB').textContent='🎙 '+lb.flag+' → 🔊 '+la.flag;
+  // warm up TTS engine (fixes first-speak delay on iOS)
+  if(window.speechSynthesis){
+    var u=new SpeechSynthesisUtterance('');
+    window.speechSynthesis.speak(u);
+  }
+  loadVoices();
+}
+function resetConv(){
+  if(window.speechSynthesis)window.speechSynthesis.cancel();
+  document.getElementById('conv').style.display='none';
+  document.getElementById('setup').style.display='flex';
+  buildGrids();
+}
+
+// ── Waveform ─────────────────────────────────────────────────────────────────
+function buildWf(elId,mode){
+  // mode: 'off' | 'rec' | 'speak'
+  var el=document.getElementById(elId);
+  var bars=24;var h='';
+  for(var i=0;i<bars;i++){
+    var ht=Math.round(Math.random()*65+20);
+    var cls='wfb'+(mode==='rec'?' act':mode==='speak'?' spk':'');
+    var an='';
+    if(mode==='rec')an='animation:wave '+(0.4+(i%5)*0.1)+'s ease-in-out '+(i*22)+'ms infinite alternate;';
+    if(mode==='speak')an='animation:wave '+(0.3+(i%7)*0.08)+'s ease-in-out '+(i*18)+'ms infinite alternate;';
+    h+='<div class="'+cls+'" style="height:'+(mode!=='off'?ht+'%':'25%')+';'+an+'"></div>';
+  }
+  el.innerHTML=h;
+}
+
+// ── Set translation box ───────────────────────────────────────────────────────
+function setBox(p,html){
+  document.getElementById('box'+p).innerHTML=html;
+}
+
+// ── Recording ─────────────────────────────────────────────────────────────────
+function startRec(p){
+  if(STATE['rec'+p])return;
+  // stop other person
+  var other=p==='A'?'B':'A';
+  if(STATE['rec'+other])stopRec(other);
+  // cancel TTS if speaking
+  if(window.speechSynthesis)window.speechSynthesis.cancel();
+
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    STATE['ch'+p]=[];
+    var mr=new MediaRecorder(stream);
+    STATE['mr'+p]=mr;
+    mr.ondataavailable=function(e){STATE['ch'+p].push(e.data);};
+    mr.onstop=function(){onStop(p);};
+    mr.start();
+    STATE['rec'+p]=true;STATE['sec'+p]=0;
+    buildWf('wf'+p,'rec');
+    var mic=document.getElementById('mic'+p);
+    mic.classList.add('recording');mic.textContent='⏹';
+    setBox(p,'<div class="trans-loading"><span style="animation:spin 1s linear infinite;display:inline-block;">🎙</span> Aufnehmen…</div>');
+    STATE['timer'+p]=setInterval(function(){
+      STATE['sec'+p]++;
+      setBox(p,'<div class="trans-loading"><span style="animation:spin 1s linear infinite;display:inline-block;">🎙</span> Aufnehmen… '+STATE['sec'+p]+'s</div>');
+    },1000);
+  }).catch(function(){notif('⚠️ Kein Mikrofonzugang — Berechtigung prüfen');});
+}
+
+function stopRec(p){
+  if(!STATE['rec'+p])return;
+  if(STATE['mr'+p]&&STATE['mr'+p].state==='recording')STATE['mr'+p].stop();
+  clearInterval(STATE['timer'+p]);
+  STATE['rec'+p]=false;
+  buildWf('wf'+p,'off');
+  var mic=document.getElementById('mic'+p);
+  mic.classList.remove('recording');mic.textContent='🎙';
+}
+
+function onStop(p){
+  var blob=new Blob(STATE['ch'+p],{type:'audio/webm'});
+  var srcLang=p==='A'?STATE.langA:STATE.langB;
+  var tgtLang=p==='A'?STATE.langB:STATE.langA;
+  var srCode=LM[srcLang]?LM[srcLang].sr:'de-DE';
+
+  setBox(p,'<div class="trans-loading"><span style="animation:spin 1s linear infinite;display:inline-block;">⟳</span> Erkenne Sprache…</div>');
+
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    setBox(p,'<p class="trans-result" style="color:#f87171;">Chrome für Spracherkennung erforderlich</p>');
+    return;
+  }
+
+  var r=new SR();r.lang=srCode;r.interimResults=false;
+  var done=false;
+  function fin(t){
+    if(done)return;done=true;
+    if(!t||t.startsWith('[')){
+      setBox(p,'<p class="trans-result" style="color:#f87171;">Nicht erkannt – bitte erneut sprechen</p>');
+      return;
+    }
+    setBox(p,'<div class="trans-loading"><span style="animation:spin 1s linear infinite;display:inline-block;">⟳</span> Übersetze…</div>');
+    translate(t,tgtLang).then(function(tr){
+      showResult(p,t,tr,srcLang,tgtLang);
+    }).catch(function(){
+      showResult(p,t,t,srcLang,tgtLang);
+    });
+  }
+  r.onresult=function(e){fin(e.results[0][0].transcript);};
+  r.onerror=function(){fin('[Fehler]');};
+  r.onend=function(){fin('[Nicht erkannt]');};
+  try{new Audio(URL.createObjectURL(blob)).play();}catch(e){}
+  r.start();
+  var dur=STATE['sec'+p]||2;
+  setTimeout(function(){try{r.stop();}catch(e){}},( dur+3)*1000);
+}
+
+function showResult(p,original,translation,srcLang,tgtLang){
+  var la=LM[srcLang];var lb=LM[tgtLang];
+  // Show text
+  setBox(p,
+    '<p class="trans-original">'+la.flag+' „'+esc(original)+'"</p>'
+    +'<p class="trans-result">'+lb.flag+' '+esc(translation)+'</p>'
+    +(STATE.ttsOn?'<div class="speaking-indicator"><span style="animation:spin 1.5s linear infinite;display:inline-block;">🔊</span> Sprachausgabe…</div>':'')
+  );
+  // Show speaking waveform
+  buildWf('wf'+p,'speak');
+  var mic=document.getElementById('mic'+p);
+  mic.classList.add('speaking');mic.textContent='🔊';
+
+  // Speak translation
+  speak(translation,tgtLang,function(){
+    // Done speaking — reset mic button
+    mic.classList.remove('speaking');mic.textContent='🎙';
+    buildWf('wf'+p,'off');
+    // Update box without speaking indicator
+    setBox(p,
+      '<p class="trans-original">'+la.flag+' „'+esc(original)+'"</p>'
+      +'<p class="trans-result">'+lb.flag+' '+esc(translation)+'</p>'
+    );
+  });
+}
+
+// ── Translate via proxy ───────────────────────────────────────────────────────
+function translate(text,lang){
+  return fetch(PROXY,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text:text,targetLang:lang})
+  }).then(function(r){return r.json();}).then(function(d){return d.translation||text;}).catch(function(){return text;});
+}
+
+// ── Notif ─────────────────────────────────────────────────────────────────────
+function notif(text){
+  var el=document.getElementById('notif');
+  el.textContent=text;el.style.display='block';
+  setTimeout(function(){el.style.display='none';},3500);
+}
+
+function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildGrids();
+</script>
+</body>
+</html>
