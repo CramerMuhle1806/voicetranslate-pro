@@ -1,7 +1,11 @@
 FROM php:8.2-apache
 
-# Włącz mod_rewrite i cURL
-RUN a2enmod rewrite && docker-php-ext-install curl
+# Włącz mod_rewrite i zainstaluj curl
+RUN apt-get update && \
+    apt-get install -y libcurl4-openssl-dev && \
+    docker-php-ext-install curl && \
+    a2enmod rewrite && \
+    rm -rf /var/lib/apt/lists/*
 
 # Skopiuj pliki aplikacji
 COPY . /var/www/html/
